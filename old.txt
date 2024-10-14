@@ -1,0 +1,104 @@
+import openai
+import os
+import time
+import json
+
+# Set up your API key
+openai.api_key = os.getenv("OPENAI_API_KEY")
+
+# Function to retrieve the assistant
+def retrieve_assistant(assistant_id):
+    try:
+        print(f"Retrieving assistant with ID: {assistant_id}")
+        assistant = openai.beta.assistants.retrieve(assistant_id)
+        print("Assistant retrieved successfully")
+        return assistant
+    except Exception as e:
+        print(f"Error retrieving assistant: {str(e)}")
+        return None
+
+# Function to create a new thread
+def create_thread():
+    try:
+        print("Creating a new thread")
+        thread = openai.beta.threads.create()
+        print(f"Thread created with ID: {thread.id}")
+        return thread
+    except Exception as e:
+        print(f"Error creating thread: {str(e)}")
+        return None
+
+# Function to chat with the assistant
+def chat_with_assistant(thread, assistant_id, user_message):
+    for attempt in range(3):  # Try 3 times
+        try:
+            print(f"Adding user message to thread: {user_message}")
+            openai.beta.threads.messages.create(
+                thread_id=thread.id,
+                role="user",
+                content=user_message
+            )
+            print("Message added successfully")
+
+            print("Running the assistant")
+            run = openai.beta.threads.runs.create(
+                thread_id=thread.id,
+                assistant_id=assistant_id
+            )
+            print(f"Run created with ID: {run.id}")
+
+            print("Waiting for run to complete")
+            while run.status not in ["completed", "requires_action"]:
+                time.sleep(1)
+                run = openai.beta.threads.runs.retrieve(
+                    thread_id=thread.id,
+                    run_id=run.id
+                )
+                print(f"Current run status: {run.status}")
+
+                if run.status == "failed":
+                    print("Run failed, retrieving detailed information:")
+                    print(f"Run details: {run}")
+                    break
+
+            if run.status == "completed":
+                print("Run completed, retrieving assistant's response")
+                messages = openai.beta.threads.messages.list(thread_id=thread.id)
+                assistant_response = messages.data[0].content[0].text.value
+                print(f"Assistant response: {assistant_response}")
+                return assistant_response, None
+            elif run.status == "requires_action":
+                print("Run requires action, processing function call")
+                # Handle function calls as before...
+
+            return None, None  # Add this line to handle unexpected scenarios
+
+        except Exception as e:
+            print(f"Attempt {attempt + 1}: Error in chat_with_assistant: {str(e)}")
+            time.sleep(2)  # Wait a bit before retrying
+
+    return "Failed to retrieve a response after multiple attempts.", None
+
+# Conduct interview function
+def conduct_interview():
+    print("Starting the interview. Type 'exit' to end the interview.")
+    while True:
+        user_input = input("You: ")
+        if user_input.lower() == 'exit':
+            break
+
+        response, function_result = chat_with_assistant(thread, assistant.id, user_input)
+        print(f"Assistant: {response}")
+
+        if function_result:
+            print(f"Function Result: {function_result}")
+            break
+
+# Run the interview
+assistant_id = "asst_6nRA1lLnXj4JMZw1RGLKegmN"
+assistant = retrieve_assistant(assistant_id)
+
+if assistant:
+    thread = create_thread()
+    if thread:
+        conduct_interview()
