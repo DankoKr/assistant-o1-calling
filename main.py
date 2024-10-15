@@ -85,7 +85,7 @@ def chat_with_assistant(thread, assistant_id, user_message):
 def call_o1_preview_model(function_args):
     try:
         response = client.chat.completions.create(
-            model="gpt-4",  # Replace with actual O1-preview model identifier
+            model="o1-preview",  # Decide which model to use to create the wk program
             messages=[
                 {"role": "system", "content": prompt},
                 {"role": "user", "content": json.dumps(function_args)}
@@ -98,7 +98,7 @@ def call_o1_preview_model(function_args):
 
 # Streamlit UI
 def main():
-    st.title("OpenAI Assistant Chat")
+    st.title("Workout Program Assistant")
 
     # Initialize session state
     if 'assistant' not in st.session_state:
@@ -109,7 +109,7 @@ def main():
         st.session_state.messages = []
 
     # Sidebar for assistant ID input
-    assistant_id = st.sidebar.text_input("Enter Assistant ID", "asst_6nRA1lLnXj4JMZw1RGLKegmN")
+    assistant_id = st.sidebar.text_input("Enter Assistant ID")
 
     if st.sidebar.button("Initialize Assistant"):
         with st.spinner("Initializing assistant..."):
