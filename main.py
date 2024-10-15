@@ -85,10 +85,9 @@ def chat_with_assistant(thread, assistant_id, user_message):
 def call_o1_preview_model(function_args):
     try:
         response = client.chat.completions.create(
-            model="o1-preview",  # Decide which model to use to create the wk program
+            model="o1-preview",
             messages=[
-                {"role": "system", "content": prompt},
-                {"role": "user", "content": json.dumps(function_args)}
+                {"role": "user", "content": f"{prompt}\n\n{json.dumps(function_args)}"}
             ]
         )
         return response.choices[0].message.content
