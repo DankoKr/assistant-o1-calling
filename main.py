@@ -4,9 +4,11 @@ import json
 import streamlit as st
 from openai import OpenAI
 from prompt import prompt
+from email_functionality import send_email_with_program
 
 # Set up your API key
 client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
+assistant_id = os.getenv("ASSISTANT_ID")
 
 # Function to retrieve the assistant
 def retrieve_assistant(assistant_id):
@@ -68,6 +70,27 @@ def chat_with_assistant(thread, assistant_id, user_message):
                                 "tool_call_id": tool_call.id,
                                 "output": json.dumps(o1_response)
                             })
+                        elif function_name == "send_training_program":
+                            # Handle sending email
+                            email = function_args.get("email")
+                            training_program = function_args.get("training_program")
+                            if training_program:
+                                success = send_email_with_program(
+                                    email, 
+                                    training_program
+                                )
+                                tool_outputs.append({
+                                    "tool_call_id": tool_call.id,
+                                    "output": json.dumps({"success": success})
+                                })
+                            else:
+                                tool_outputs.append({
+                                    "tool_call_id": tool_call.id,
+                                    "output": json.dumps({
+                                        "success": False,
+                                        "error": "No training program found"
+                                    })
+                                })
 
                     run = client.beta.threads.runs.submit_tool_outputs(
                         thread_id=thread.id,
@@ -101,21 +124,13 @@ def main():
 
     # Initialize session state
     if 'assistant' not in st.session_state:
-        st.session_state.assistant = None
+        st.session_state.assistant = retrieve_assistant(assistant_id)
+        st.session_state.thread = create_thread()
+        st.success("Assistant initialized successfully!")
     if 'thread' not in st.session_state:
         st.session_state.thread = None
     if 'messages' not in st.session_state:
         st.session_state.messages = []
-
-    # Sidebar for assistant ID input
-    assistant_id = st.sidebar.text_input("Enter Assistant ID")
-
-    if st.sidebar.button("Initialize Assistant"):
-        with st.spinner("Initializing assistant..."):
-            st.session_state.assistant = retrieve_assistant(assistant_id)
-            if st.session_state.assistant:
-                st.session_state.thread = create_thread()
-                st.success("Assistant initialized successfully!")
 
     # Main chat interface
     if st.session_state.assistant and st.session_state.thread:
