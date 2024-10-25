@@ -15,6 +15,18 @@ This is a training program generator created for the BullsAI company. It makes u
 
 1. Create a python virtual env:
 
+```bash
+python -m venv venv
+```
+
+Or:
+
+```bash
+python3 -m venv venv
+```
+
+2. Activate the virtual env:
+
 Windows (Command Prompt):
 
 ```bash
@@ -25,18 +37,6 @@ Linux/macOS:
 
 ```bash
 source venv/bin/activate
-```
-
-2. Activate the virtual env:
-
-```bash
-python3 -m venv venv
-```
-
-Or:
-
-```bash
-python3 -m venv venv
 ```
 
 3. Install the requirements.txt
